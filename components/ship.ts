@@ -1,4 +1,4 @@
-class Ship
+export class Ship
 {
     private _length: number;
     get Length() { return this._length; }
