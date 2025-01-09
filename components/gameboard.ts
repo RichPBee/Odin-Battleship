@@ -1,4 +1,5 @@
 import { Vector2 } from "../utilities/IVector2";
+import { Ship } from "./ship";
 
 export class Gameboard
 {

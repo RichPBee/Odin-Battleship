@@ -1,6 +1,8 @@
 {
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "webpack": "webpack",
+    "build": "tsc && webpack"
   },
   "jest": {
     "preset": "ts-jest"
@@ -8,7 +10,8 @@
   "devDependencies": {
     "jest": "^29.7.0",
     "ts-jest": "^29.2.5",
-    "webpack": "^5.97.1"
+    "webpack": "^5.97.1",
+    "webpack-cli": "^6.0.1"
   },
   "dependencies": {
     "@types/jest": "^29.5.14"

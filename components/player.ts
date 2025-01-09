@@ -1,21 +1,21 @@
 import {Gameboard} from './gameboard';
 import {Ship} from './ship';
 
-class Player
+export class Player
 {
     private _gameboard: Gameboard;
     private _availableShips: Ship[];
-    constructor()
+    constructor(boardSize: number = 10)
     {
-        this._gameboard = new Gameboard();
+        this._gameboard = new Gameboard(boardSize);
         this._availableShips = [];
     }
 }
 
-class Computer extends Player
+export class Computer extends Player
 {
     private generateRandomPosition()
     {
-        
+
     }
 }
