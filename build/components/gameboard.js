@@ -3,6 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Gameboard = void 0;
 class Gameboard {
     get NumShips() { return this._ships.length; }
+    get OccupiedPositions() { return this._occupiedPositions; }
+    ;
     get AllSunk() { return this._allSunk; }
     constructor(size = 10) {
         this._ships = [];
@@ -21,8 +23,8 @@ class Gameboard {
                 this._occupiedPositions.push({ x: x + i, y: y });
             }
             else {
-                this._grid[x][y + 1] = ship;
-                this._occupiedPositions.push({ x: x, y: y + 1 });
+                this._grid[x][y + i] = ship;
+                this._occupiedPositions.push({ x: x, y: y + i });
             }
         }
         this._ships.push(ship);
@@ -52,9 +54,11 @@ class Gameboard {
     generateGrid(size) {
         this._grid = [];
         for (let i = 0; i < size; i++) {
-            this._grid[i] = [];
             for (let j = 0; j < size; j++) {
-                this._grid[i][j] = null;
+                if (!this._grid[j]) {
+                    this._grid[j] = [];
+                }
+                this._grid[j][i] = null;
             }
         }
     }

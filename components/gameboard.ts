@@ -11,6 +11,8 @@ export class Gameboard
     private _hitPositions: Vector2[];
     private _allSunk: Boolean;
     private _occupiedPositions: Vector2[];
+    get OccupiedPositions() {return this._occupiedPositions};
+
     get AllSunk() { return this._allSunk; }
 
     constructor(size: number = 10)
@@ -35,8 +37,8 @@ export class Gameboard
             }
             else
             {
-                this._grid[x][y + 1] = ship;
-                this._occupiedPositions.push({x: x, y: y + 1});
+                this._grid[x][y + i] = ship;
+                this._occupiedPositions.push({x: x, y: y + i});
             }
         }
         this._ships.push(ship);
@@ -78,10 +80,13 @@ export class Gameboard
         this._grid = [];
         for (let i = 0; i < size; i++)
         {
-            this._grid[i] = [];
             for (let j = 0; j < size; j++)
             {
-                this._grid[i][j] = null;
+                if (!this._grid[j])
+                {
+                    this._grid[j] = [];
+                }
+                this._grid[j][i] = null;
             }
         }
     }

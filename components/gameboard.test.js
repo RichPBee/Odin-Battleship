@@ -36,6 +36,16 @@ it("Able to succesfully attack a ship on the board", () => {
     expect(shipLength1.isSunk()).toBeTruthy();
 })
 
+it("Able to hit ships with multiple points", () => {
+    const gameBoard = new Gameboard();
+    gameBoard.placeShip(shipLength3, position);
+    for (let i = 0; i < 3; i++)
+    {
+        const hit = gameBoard.receiveAttack({x: i, y: 0});
+        expect(hit).toBeTruthy();
+    }
+})
+
 it("Able to keep track of missed attacks", () => {
     const gameboard = new Gameboard(); 
     gameboard.receiveAttack(position);

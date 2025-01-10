@@ -1,5 +1,8 @@
 export class Ship
 {
+    private _name: string;
+    get Name() { return this._name; }
+
     private _length: number;
     get Length() { return this._length; }
 
@@ -8,11 +11,12 @@ export class Ship
 
     private _sunk: boolean;
 
-    constructor(length: number)
+    constructor(length: number, name: string = 'ship')
     {
         this._length = length;
         this._numHits = 0;
         this._sunk = false;
+        this._name = name;
     }
 
     public hit()
