@@ -1,4 +1,4 @@
-import { Player } from "./player";
+import { Computer, Player } from "./player";
 import { GameContext } from "../Game";
 
 export enum Players
@@ -23,6 +23,8 @@ export class GameManager
     get CurrentPlayer() { return this._currentPlayer; }
     private _players: [Player, Player];
     private _currentState: GameState;
+    private _isTwoPlayer: boolean;
+    get IsTwoPlayer() { return this._isTwoPlayer; } 
     get PlayerOne() { return this._players[ 0 ]; }
     get PlayerTwo() { return this._players[ 1 ]; }
 
@@ -39,7 +41,18 @@ export class GameManager
     {
         const playerIndex = Number(this._activeIndex) ? Players.One : Players.Two;
         this._currentPlayer =  this._players[playerIndex];
+        console.log(this._currentPlayer);
         this._activeIndex = playerIndex;
+        this.playCurrentTurn();
+    }
+
+    public checkForWin()
+    {
+        const enemyIndex = Number(this._activeIndex) ? Players.Two : Players.One;
+        if (this._players[enemyIndex].Gameboard.AllSunk)
+        {
+            console.log(`${this._currentPlayer.Name} has won the game!`);
+        }
     }
 
     public startPlaying()
@@ -52,6 +65,15 @@ export class GameManager
     public switchState(newState: GameState)
     {
         this._currentState = newState;
+    }
+
+    private playCurrentTurn()
+    {
+        if (this._currentPlayer === this.PlayerTwo && !this._isTwoPlayer)
+        {
+            const position = (this.PlayerTwo as Computer).generateRandomPosition(this.PlayerOne);
+            this._context.UIManager.clickBoardSquare(position);
+        }
     }
 }
 

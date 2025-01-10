@@ -1,16 +1,25 @@
 import {Gameboard} from './gameboard';
 import {Ship} from './ship';
+import { Vector2 } from '../utilities/IVector2';
 
 export class Player
 {
     protected _gameboard: Gameboard;
     get Gameboard() { return this._gameboard; }
 
+    protected _placedPositions: Vector2[];
+    protected _hitPositions: Vector2[];
+
     protected _availableShips: Ship[];
-    constructor(boardSize: number = 10)
+
+    protected _name: string;
+    get Name() {return this._name;}
+
+    constructor(boardSize: number = 10, name: string = 'Player')
     {
         this._gameboard = new Gameboard(boardSize);
         this._availableShips = [];
+        this._name = name;
         this.setupShips();
     }
 
@@ -46,9 +55,20 @@ export class Player
 
 export class Computer extends Player
 {
-    private generateRandomPosition()
+    constructor(boardSize: number, name: string = 'Computer')
     {
+        super(boardSize, name);
+    }
 
+    public generateRandomPosition(enemy: Player): Vector2
+    {
+        const position = {x: Math.floor(Math.random() * 10), y: Math.floor(Math.random() * 10)};
+        const isUsed = enemy.Gameboard.isPositionHit(position, true) || enemy.Gameboard.isPositionHit(position, false)
+        if (!isUsed)
+        {
+            return position;
+        }
+        return this.generateRandomPosition(enemy);
     }
     
     protected placeShipAuto(ship: Ship): void 

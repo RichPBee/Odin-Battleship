@@ -15,6 +15,7 @@ var GameState;
 class GameManager {
     get ActiveIndex() { return this._activeIndex; }
     get CurrentPlayer() { return this._currentPlayer; }
+    get IsTwoPlayer() { return this._isTwoPlayer; }
     get PlayerOne() { return this._players[0]; }
     get PlayerTwo() { return this._players[1]; }
     constructor(playerOne, playerTwo, context) {
@@ -27,7 +28,15 @@ class GameManager {
     switchPlayer() {
         const playerIndex = Number(this._activeIndex) ? Players.One : Players.Two;
         this._currentPlayer = this._players[playerIndex];
+        console.log(this._currentPlayer);
         this._activeIndex = playerIndex;
+        this.playCurrentTurn();
+    }
+    checkForWin() {
+        const enemyIndex = Number(this._activeIndex) ? Players.Two : Players.One;
+        if (this._players[enemyIndex].Gameboard.AllSunk) {
+            console.log(`${this._currentPlayer.Name} has won the game!`);
+        }
     }
     startPlaying() {
         this._players[0].setupBoard();
@@ -36,6 +45,12 @@ class GameManager {
     }
     switchState(newState) {
         this._currentState = newState;
+    }
+    playCurrentTurn() {
+        if (this._currentPlayer === this.PlayerTwo && !this._isTwoPlayer) {
+            const position = this.PlayerTwo.generateRandomPosition(this.PlayerOne);
+            this._context.UIManager.clickBoardSquare(position);
+        }
     }
 }
 exports.GameManager = GameManager;

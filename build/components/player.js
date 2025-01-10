@@ -5,9 +5,11 @@ const gameboard_1 = require("./gameboard");
 const ship_1 = require("./ship");
 class Player {
     get Gameboard() { return this._gameboard; }
-    constructor(boardSize = 10) {
+    get Name() { return this._name; }
+    constructor(boardSize = 10, name = 'Player') {
         this._gameboard = new gameboard_1.Gameboard(boardSize);
         this._availableShips = [];
+        this._name = name;
         this.setupShips();
     }
     setupBoard() {
@@ -34,7 +36,17 @@ class Player {
 }
 exports.Player = Player;
 class Computer extends Player {
-    generateRandomPosition() {
+    constructor(boardSize, name = 'Computer') {
+        super(boardSize, name);
+    }
+    generateRandomPosition(enemy) {
+        const position = { x: Math.floor(Math.random() * 10), y: Math.floor(Math.random() * 10) };
+        console.log(position);
+        const isUsed = enemy.Gameboard.isPositionHit(position, true) || enemy.Gameboard.isPositionHit(position, false);
+        if (!isUsed) {
+            return position;
+        }
+        return this.generateRandomPosition(enemy);
     }
     placeShipAuto(ship) {
         super.placeShipAuto(ship);
