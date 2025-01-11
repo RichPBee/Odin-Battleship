@@ -41,7 +41,6 @@ class Computer extends Player {
     }
     generateRandomPosition(enemy) {
         const position = { x: Math.floor(Math.random() * 10), y: Math.floor(Math.random() * 10) };
-        console.log(position);
         const isUsed = enemy.Gameboard.isPositionHit(position, true) || enemy.Gameboard.isPositionHit(position, false);
         if (!isUsed) {
             return position;

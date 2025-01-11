@@ -10,6 +10,7 @@ class UIManager {
         this._playerTwoSquares = [];
         this._dummySquaresOne = [];
         this._dummySquaresTwo = [];
+        this._squareListeners = {};
         this._context = context;
         this.createComponents();
     }
@@ -92,11 +93,25 @@ class UIManager {
             dummySquare = this._dummySquaresOne[position.x][position.y];
         }
         this.changeSquareColour(isHit, square, dummySquare);
-        gameManager.checkForWin();
+        gameManager.checkForWin(gameManager.ActiveIndex);
         gameManager.switchPlayer();
         if (this._context.GameManager.IsTwoPlayer) {
             this.switchPlayer(gameManager.ActiveIndex);
             return;
+        }
+    }
+    disableBoardUI() {
+        for (let i = 0; i < this._boardSize; i++) {
+            for (let j = 0; j < this._boardSize; j++) {
+                if (this._squareListeners[this.getListenerKey({ x: j, y: i })]) {
+                    this._dummySquaresOne[j][i].removeEventListener('click', this._squareListeners[this.getListenerKey({ x: j, y: i })]);
+                    delete this._squareListeners[this.getListenerKey({ x: j, y: i })];
+                }
+                if (this._squareListeners[this.getListenerKey({ x: j, y: i }, false)]) {
+                    this._dummySquaresTwo[j][i].removeEventListener('click', this._squareListeners[this.getListenerKey({ x: j, y: i }, false)]);
+                    delete this._squareListeners[this.getListenerKey({ x: j, y: i }, false)];
+                }
+            }
         }
     }
     changeSquareColour(isHit, square, dummySquare) {
@@ -135,16 +150,27 @@ class UIManager {
         dummySquare2.className = 'boardSquare';
         this._dummyBoardTwo.appendChild(dummySquare2);
         this._dummySquaresTwo[x][y] = dummySquare2;
-        dummySquare.addEventListener('click', () => {
+        const listenerOne = () => {
             if (this._context.GameManager.ActiveIndex === 0)
                 return;
-            this.clickBoardSquare({ x: x, y: y });
-        });
-        dummySquare2.addEventListener('click', () => {
+            this.clickBoardSquare({ x, y });
+            dummySquare.removeEventListener('click', listenerOne);
+            delete this._squareListeners[this.getListenerKey({ x, y })];
+        };
+        const listenerTwo = () => {
             if (this._context.GameManager.ActiveIndex === 1)
                 return;
-            this.clickBoardSquare({ x: x, y: y });
-        });
+            this.clickBoardSquare({ x, y });
+            dummySquare2.removeEventListener('click', listenerTwo);
+            delete this._squareListeners[this.getListenerKey({ x, y }, false)];
+        };
+        this._squareListeners[this.getListenerKey({ x, y })] = listenerOne;
+        this._squareListeners[this.getListenerKey({ x, y }, false)] = listenerTwo;
+        dummySquare.addEventListener('click', listenerOne);
+        dummySquare2.addEventListener('click', listenerTwo);
+    }
+    getListenerKey(position, gameBoardOne = true) {
+        return gameBoardOne ? `board-square-${position.x}-${position.y}` : `board-square-two-${position.x}-${position.y}`;
     }
 }
 exports.UIManager = UIManager;

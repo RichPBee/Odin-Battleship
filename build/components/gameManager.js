@@ -28,14 +28,15 @@ class GameManager {
     switchPlayer() {
         const playerIndex = Number(this._activeIndex) ? Players.One : Players.Two;
         this._currentPlayer = this._players[playerIndex];
-        console.log(this._currentPlayer);
         this._activeIndex = playerIndex;
         this.playCurrentTurn();
     }
-    checkForWin() {
-        const enemyIndex = Number(this._activeIndex) ? Players.Two : Players.One;
-        if (this._players[enemyIndex].Gameboard.AllSunk) {
-            console.log(`${this._currentPlayer.Name} has won the game!`);
+    checkForWin(playerIndex) {
+        const player = playerIndex === Players.One ? this.PlayerOne : this.PlayerTwo;
+        const enemy = playerIndex === Players.One ? this.PlayerTwo : this.PlayerOne;
+        if (enemy.Gameboard.AllSunk) {
+            console.log(`${player.Name} has won the game!`);
+            this._context.UIManager.disableBoardUI();
         }
     }
     startPlaying() {
@@ -49,7 +50,7 @@ class GameManager {
     playCurrentTurn() {
         if (this._currentPlayer === this.PlayerTwo && !this._isTwoPlayer) {
             const position = this.PlayerTwo.generateRandomPosition(this.PlayerOne);
-            this._context.UIManager.clickBoardSquare(position);
+            setTimeout(() => this._context.UIManager.clickBoardSquare(position), 300);
         }
     }
 }
