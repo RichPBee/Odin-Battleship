@@ -12,9 +12,11 @@ class UIManager {
         this._dummySquaresTwo = [];
         this._squareListeners = {};
         this._context = context;
+        this._isHorizontal = true;
         this.createComponents();
     }
     createComponents() {
+        this.createTopSection();
         this.createBoardSections();
         this.createBoardSquares();
         this.createBottomSection();
@@ -60,12 +62,21 @@ class UIManager {
         const bottomSection = document.createElement('div');
         const startButton = document.createElement('button');
         startButton.innerText = 'Start';
+        const resetButton = document.createElement('button');
+        resetButton.innerText = 'Reset';
         startButton.addEventListener('click', () => {
-            this._context.GameManager.startPlaying();
+            this._context.GameManager.startSetup();
             startButton.disabled = true;
             this.colourSquares();
+            this.enableUI();
+        });
+        resetButton.addEventListener('click', () => {
+            this._context.GameManager.reset();
+            this.resetSquares();
+            startButton.disabled = false;
         });
         bottomSection.appendChild(startButton);
+        bottomSection.appendChild(resetButton);
         this._main.appendChild(bottomSection);
     }
     colourSquares() {
@@ -75,6 +86,18 @@ class UIManager {
         }
         for (const pos of PlayerTwo.Gameboard.OccupiedPositions) {
             this._playerTwoSquares[pos.x][pos.y].setAttribute('style', 'background-color: black');
+        }
+    }
+    resetSquares() {
+        this.disableBoardUI();
+        for (let i = 0; i < this._boardSize; i++) {
+            for (let j = 0; j < this._boardSize; j++) {
+                this._playerOneSquares[j][i].setAttribute('style', 'background-color: transparent');
+                this._playerTwoSquares[j][i].setAttribute('style', 'background-color: transparent');
+                this._dummySquaresOne[j][i].setAttribute('style', 'background-color: transparent');
+                this._dummySquaresTwo[j][i].setAttribute('style', 'background-color: transparent');
+                this.applyListeners(this._dummySquaresOne[j][i], this._dummySquaresTwo[j][i], { x: j, y: i });
+            }
         }
     }
     clickBoardSquare(position) {
@@ -98,6 +121,13 @@ class UIManager {
         if (this._context.GameManager.IsTwoPlayer) {
             this.switchPlayer(gameManager.ActiveIndex);
             return;
+        }
+    }
+    enableUI() {
+        for (let i = 0; i < this._boardSize; i++) {
+            for (let j = 0; j < this._boardSize; j++) {
+                this.applyListeners(this._dummySquaresOne[j][i], this._dummySquaresTwo[j][i], { x: j, y: i });
+            }
         }
     }
     disableBoardUI() {
@@ -140,6 +170,15 @@ class UIManager {
         this._playerTwoSquares[x][y] = boardSquare2;
         this._playerOneBoard.appendChild(boardSquare);
         this._playerTwoBoard.appendChild(boardSquare2);
+        const setupListener = () => {
+            if (this._context.GameManager.GameState !== 1)
+                return;
+            this._context.GameManager.placeShip({ x, y }, this._isHorizontal);
+            this._context.GameManager.checkSetup();
+            this.colourSquares();
+        };
+        boardSquare.addEventListener('click', setupListener);
+        boardSquare2.addEventListener('click', setupListener);
     }
     createDummySquare(x, y) {
         const dummySquare = document.createElement('div');
@@ -150,27 +189,46 @@ class UIManager {
         dummySquare2.className = 'boardSquare';
         this._dummyBoardTwo.appendChild(dummySquare2);
         this._dummySquaresTwo[x][y] = dummySquare2;
+    }
+    getListenerKey(position, gameBoardOne = true) {
+        return gameBoardOne ? `board-square-${position.x}-${position.y}` : `board-square-two-${position.x}-${position.y}`;
+    }
+    applyListeners(dummySquare, dummySquare2, position) {
         const listenerOne = () => {
             if (this._context.GameManager.ActiveIndex === 0)
                 return;
-            this.clickBoardSquare({ x, y });
+            if (this._context.GameManager.GameState !== 2)
+                return;
+            this.clickBoardSquare(position);
             dummySquare.removeEventListener('click', listenerOne);
-            delete this._squareListeners[this.getListenerKey({ x, y })];
+            delete this._squareListeners[this.getListenerKey(position)];
         };
         const listenerTwo = () => {
             if (this._context.GameManager.ActiveIndex === 1)
                 return;
-            this.clickBoardSquare({ x, y });
+            if (this._context.GameManager.GameState !== 2)
+                return;
+            this.clickBoardSquare(position);
             dummySquare2.removeEventListener('click', listenerTwo);
-            delete this._squareListeners[this.getListenerKey({ x, y }, false)];
+            delete this._squareListeners[this.getListenerKey(position, false)];
         };
-        this._squareListeners[this.getListenerKey({ x, y })] = listenerOne;
-        this._squareListeners[this.getListenerKey({ x, y }, false)] = listenerTwo;
+        this._squareListeners[this.getListenerKey(position)] = listenerOne;
+        this._squareListeners[this.getListenerKey(position, false)] = listenerTwo;
         dummySquare.addEventListener('click', listenerOne);
         dummySquare2.addEventListener('click', listenerTwo);
     }
-    getListenerKey(position, gameBoardOne = true) {
-        return gameBoardOne ? `board-square-${position.x}-${position.y}` : `board-square-two-${position.x}-${position.y}`;
+    createTopSection() {
+        this._topSection = document.createElement('div');
+        const switchDirectionButton = document.createElement('button');
+        switchDirectionButton.innerText = 'Horizontal';
+        const switchCallBack = () => {
+            this._isHorizontal = !this._isHorizontal;
+            const newText = this._isHorizontal ? 'Horizontal' : 'Vertical';
+            switchDirectionButton.innerText = newText;
+        };
+        switchDirectionButton.addEventListener('click', switchCallBack);
+        this._topSection.appendChild(switchDirectionButton);
+        this._main.appendChild(this._topSection);
     }
 }
 exports.UIManager = UIManager;

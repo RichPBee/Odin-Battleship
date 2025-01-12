@@ -11,6 +11,7 @@ class Gameboard {
         this._hitPositions = [];
         this._missedPositions = [];
         this._occupiedPositions = [];
+        this._size = size;
         this.generateGrid(size);
     }
     placeShip(ship, position, isHorizontal = true) {
@@ -43,6 +44,13 @@ class Gameboard {
     }
     isPositionHit(position, checkMisses) {
         return checkMisses ? this.checkArrayForHit(position, this._missedPositions) : this.checkArrayForHit(position, this._hitPositions);
+    }
+    reset() {
+        this._ships = [];
+        this._hitPositions = [];
+        this._missedPositions = [];
+        this._occupiedPositions = [];
+        this.generateGrid(this._size);
     }
     checkArrayForHit(position, array) {
         return array.find(pos => pos.x === position.x && pos.y === position.y) != undefined;

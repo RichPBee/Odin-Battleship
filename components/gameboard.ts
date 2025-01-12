@@ -11,6 +11,7 @@ export class Gameboard
     private _hitPositions: Vector2[];
     private _allSunk: Boolean;
     private _occupiedPositions: Vector2[];
+    private _size;
     get OccupiedPositions() {return this._occupiedPositions};
 
     get AllSunk() { return this._allSunk; }
@@ -21,6 +22,7 @@ export class Gameboard
         this._hitPositions = [];
         this._missedPositions = [];
         this._occupiedPositions = [];
+        this._size = size;
         this.generateGrid(size);
     }
 
@@ -62,6 +64,15 @@ export class Gameboard
     public isPositionHit(position: Vector2, checkMisses: boolean): boolean
     {
         return checkMisses ? this.checkArrayForHit(position, this._missedPositions) : this.checkArrayForHit(position, this._hitPositions);
+    }
+
+    public reset()
+    {
+        this._ships = [];
+        this._hitPositions = [];
+        this._missedPositions = [];
+        this._occupiedPositions = [];
+        this.generateGrid(this._size);
     }
 
     private checkArrayForHit(position: Vector2, array: Vector2[]): boolean

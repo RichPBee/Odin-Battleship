@@ -1,6 +1,7 @@
 import {Gameboard} from './gameboard';
 import {Ship} from './ship';
 import { Vector2 } from '../utilities/IVector2';
+import { GameContext } from '../Game';
 
 export class Player
 {
@@ -11,7 +12,8 @@ export class Player
     protected _hitPositions: Vector2[];
 
     protected _availableShips: Ship[];
-
+    get AvailableShips() {return this._availableShips;}
+    protected _isComputerPlayer: boolean;
     protected _name: string;
     get Name() {return this._name;}
 
@@ -20,15 +22,23 @@ export class Player
         this._gameboard = new Gameboard(boardSize);
         this._availableShips = [];
         this._name = name;
+        this._isComputerPlayer = false;
         this.setupShips();
     }
 
-    public setupBoard()
+    public reset()
+    {
+        this._gameboard.reset();
+        this.setupShips();
+    }
+
+    public async setupBoard()
     {
         for (const ship of this._availableShips)
         {
             this.placeShipAuto(ship);
         }
+        return;
     }
 
     protected setupShips()
@@ -51,6 +61,17 @@ export class Player
             this.placeShipAuto(ship);
         }
     }
+
+    public placeShip(ship: Ship, position: Vector2, isHorizontal: boolean): boolean
+    {
+        const placed = this._gameboard.placeShip(ship, position, isHorizontal );
+        if (placed)
+        {
+            this._availableShips.shift();
+            return true;
+        }
+        return false;
+    }
 }
 
 export class Computer extends Player
@@ -58,6 +79,7 @@ export class Computer extends Player
     constructor(boardSize: number, name: string = 'Computer')
     {
         super(boardSize, name);
+        this._isComputerPlayer = true;
     }
 
     public generateRandomPosition(enemy: Player): Vector2

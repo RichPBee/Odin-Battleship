@@ -1,7 +1,6 @@
 import { GameContext } from "../Game";
 import { Vector2 } from "../utilities/IVector2";
-import { Players } from "./gameManager";
-import { Player } from "./player";
+import { GameState } from "./gameManager";
 
 type ListenerFunction =
 {
@@ -13,6 +12,8 @@ export class UIManager
     private _context: GameContext;
     private _document: Document;
     private _main: HTMLElement;
+    private _title: HTMLElement;
+    private _topSection: HTMLElement;
     private _boardSection: HTMLElement;
     private _playerOneSquares: HTMLDivElement[][];
     private _playerTwoSquares: HTMLDivElement[][];
@@ -24,6 +25,8 @@ export class UIManager
     private _dummyBoardOne: HTMLElement;
     private _dummyBoardTwo: HTMLElement;
     private _squareListeners: ListenerFunction;
+
+    private _isHorizontal: boolean;
 
     private _boardSize: number;
 
@@ -38,11 +41,13 @@ export class UIManager
         this._dummySquaresTwo = [];
         this._squareListeners = {};
         this._context = context;
+        this._isHorizontal = true;
         this.createComponents();
     }
 
     private createComponents()
     {
+        this.createTopSection();
         this.createBoardSections();
         this.createBoardSquares();
         this.createBottomSection();
@@ -103,14 +108,24 @@ export class UIManager
         const bottomSection = document.createElement('div');
         const startButton  = document.createElement('button');
         startButton.innerText = 'Start';
+        const resetButton = document.createElement('button');
+        resetButton.innerText = 'Reset';
 
         startButton.addEventListener('click', () => { 
-            this._context.GameManager.startPlaying();
+            this._context.GameManager.startSetup();
             startButton.disabled = true;
             this.colourSquares();
+            this.enableUI();
+        })
+        
+        resetButton.addEventListener('click', () => { 
+            this._context.GameManager.reset();
+            this.resetSquares();
+            startButton.disabled = false;
         })
 
         bottomSection.appendChild(startButton);
+        bottomSection.appendChild(resetButton);
         this._main.appendChild(bottomSection);
     }
 
@@ -125,6 +140,22 @@ export class UIManager
         for (const pos of PlayerTwo.Gameboard.OccupiedPositions)
         {
             this._playerTwoSquares[pos.x][pos.y].setAttribute('style', 'background-color: black');
+        }
+    }
+
+    private resetSquares()
+    {
+        this.disableBoardUI();
+        for (let i = 0; i < this._boardSize; i++)
+        {
+            for (let j = 0; j < this._boardSize; j++)
+            {
+                this._playerOneSquares[j][i].setAttribute('style', 'background-color: transparent');
+                this._playerTwoSquares[j][i].setAttribute('style', 'background-color: transparent');
+                this._dummySquaresOne[j][i].setAttribute('style', 'background-color: transparent');
+                this._dummySquaresTwo[j][i].setAttribute('style', 'background-color: transparent');
+                this.applyListeners(this._dummySquaresOne[j][i], this._dummySquaresTwo[j][i], {x: j, y: i});
+            }
         }
     }
 
@@ -153,6 +184,17 @@ export class UIManager
         {
             this.switchPlayer(gameManager.ActiveIndex);
             return;
+        }
+    }
+
+    public enableUI()
+    {
+        for (let i = 0; i < this._boardSize; i++)
+        {
+            for (let j = 0; j < this._boardSize; j++)
+            {
+                this.applyListeners(this._dummySquaresOne[j][i], this._dummySquaresTwo[j][i], {x: j, y: i});
+            }
         }
     }
 
@@ -185,7 +227,7 @@ export class UIManager
         dummySquare.removeEventListener('click', this.clickBoardSquare);
     }
 
-    private switchPlayer(index: number)
+    public switchPlayer(index: number)
     {
         if (index === 1)
         {
@@ -208,6 +250,16 @@ export class UIManager
         this._playerTwoSquares[x][y] = boardSquare2;
         this._playerOneBoard.appendChild(boardSquare);
         this._playerTwoBoard.appendChild(boardSquare2);
+
+        const setupListener = () => {
+            if (this._context.GameManager.GameState !== 1) return;
+            this._context.GameManager.placeShip({x, y}, this._isHorizontal);
+            this._context.GameManager.checkSetup();
+            this.colourSquares();
+        }
+
+        boardSquare.addEventListener('click', setupListener);
+        boardSquare2.addEventListener('click', setupListener);
     }
 
     private createDummySquare(x: number, y: number)
@@ -221,29 +273,49 @@ export class UIManager
         dummySquare2.className = 'boardSquare';
         this._dummyBoardTwo.appendChild(dummySquare2);
         this._dummySquaresTwo[x][y] = dummySquare2;
-
-        const listenerOne = () => { 
-            if (this._context.GameManager.ActiveIndex === 0) return;
-            this.clickBoardSquare({x, y});
-            dummySquare.removeEventListener('click', listenerOne);
-            delete this._squareListeners[this.getListenerKey({x, y})];
-        }
-
-        const listenerTwo = () => { 
-            if (this._context.GameManager.ActiveIndex === 1) return;
-            this.clickBoardSquare({x, y});
-            dummySquare2.removeEventListener('click', listenerTwo);
-            delete this._squareListeners[this.getListenerKey({x, y}, false)];
-        }
-
-        this._squareListeners[this.getListenerKey({x, y})] = listenerOne;
-        this._squareListeners[this.getListenerKey({x, y}, false)] = listenerTwo;
-        dummySquare.addEventListener('click', listenerOne);
-        dummySquare2.addEventListener('click', listenerTwo);
     }
 
     private getListenerKey(position: Vector2, gameBoardOne: boolean = true)
     {
         return gameBoardOne ? `board-square-${position.x}-${position.y}` : `board-square-two-${position.x}-${position.y}`;
+    }
+
+    private applyListeners(dummySquare: HTMLElement, dummySquare2: HTMLElement, position: Vector2)
+    {
+        const listenerOne = () => { 
+            if (this._context.GameManager.ActiveIndex === 0) return;
+            if (this._context.GameManager.GameState !== 2) return;
+            this.clickBoardSquare(position);
+            dummySquare.removeEventListener('click', listenerOne);
+            delete this._squareListeners[this.getListenerKey(position)];
+        }
+
+        const listenerTwo = () => { 
+            if (this._context.GameManager.ActiveIndex === 1) return;
+            if (this._context.GameManager.GameState !== 2) return;
+            this.clickBoardSquare(position);
+            dummySquare2.removeEventListener('click', listenerTwo);
+            delete this._squareListeners[this.getListenerKey(position, false)];
+        }
+
+        this._squareListeners[this.getListenerKey(position)] = listenerOne;
+        this._squareListeners[this.getListenerKey(position, false)] = listenerTwo;
+        dummySquare.addEventListener('click', listenerOne);
+        dummySquare2.addEventListener('click', listenerTwo);
+    }
+
+    private createTopSection()
+    {
+        this._topSection = document.createElement('div');
+        const switchDirectionButton = document.createElement('button');
+        switchDirectionButton.innerText = 'Horizontal';
+        const switchCallBack = () => { 
+            this._isHorizontal = !this._isHorizontal;
+            const newText = this._isHorizontal ? 'Horizontal' : 'Vertical';
+            switchDirectionButton.innerText = newText;
+        }
+        switchDirectionButton.addEventListener('click', switchCallBack);
+        this._topSection.appendChild(switchDirectionButton);
+        this._main.appendChild(this._topSection);
     }
 }
