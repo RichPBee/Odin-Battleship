@@ -16,3 +16,8 @@
     display: flex;
     gap: 20px;
 }
+
+.hoverableSquare:hover
+{
+    background-color: chartreuse;
+}

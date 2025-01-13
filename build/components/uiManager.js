@@ -82,10 +82,14 @@ class UIManager {
     colourSquares() {
         const { PlayerOne, PlayerTwo } = this._context.GameManager;
         for (const pos of PlayerOne.Gameboard.OccupiedPositions) {
-            this._playerOneSquares[pos.x][pos.y].setAttribute('style', 'background-color: black');
+            const square = this._playerOneSquares[pos.x][pos.y];
+            square.setAttribute('style', 'background-color: black');
+            square.classList.remove('hoverableSquare');
         }
         for (const pos of PlayerTwo.Gameboard.OccupiedPositions) {
-            this._playerTwoSquares[pos.x][pos.y].setAttribute('style', 'background-color: black');
+            const square = this._playerTwoSquares[pos.x][pos.y];
+            square.setAttribute('style', 'background-color: black');
+            square.classList.remove('hoverableSquare');
         }
     }
     resetSquares() {
@@ -160,6 +164,22 @@ class UIManager {
         this._boardSection.replaceChild(this._dummyBoardTwo, this._playerTwoBoard);
         this._boardSection.replaceChild(this._playerOneBoard, this._dummyBoardOne);
     }
+    removeHoverable(removeFromDummy = false) {
+        if (removeFromDummy) {
+            for (let i = 0; i < this._boardSize; i++) {
+                for (let j = 0; j < this._boardSize; j++) {
+                    this._dummySquaresOne[j][i].classList.remove('hoverableSquare');
+                    this._dummySquaresTwo[j][i].classList.remove('hoverableSquare');
+                }
+            }
+        }
+        for (let i = 0; i < this._boardSize; i++) {
+            for (let j = 0; j < this._boardSize; j++) {
+                this._playerOneSquares[j][i].classList.remove('hoverableSquare');
+                this._playerTwoSquares[j][i].classList.remove('hoverableSquare');
+            }
+        }
+    }
     createMainSquare(x, y) {
         const boardSquare = document.createElement('div');
         const boardSquare2 = document.createElement('div');
@@ -179,6 +199,8 @@ class UIManager {
         };
         boardSquare.addEventListener('click', setupListener);
         boardSquare2.addEventListener('click', setupListener);
+        boardSquare.classList.add('hoverableSquare');
+        boardSquare2.classList.add('hoverableSquare');
     }
     createDummySquare(x, y) {
         const dummySquare = document.createElement('div');
@@ -216,6 +238,8 @@ class UIManager {
         this._squareListeners[this.getListenerKey(position, false)] = listenerTwo;
         dummySquare.addEventListener('click', listenerOne);
         dummySquare2.addEventListener('click', listenerTwo);
+        dummySquare.classList.add('hoverableSquare');
+        dummySquare2.classList.add('hoverableSquare');
     }
     createTopSection() {
         this._topSection = document.createElement('div');

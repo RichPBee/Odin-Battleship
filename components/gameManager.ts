@@ -44,7 +44,7 @@ export class GameManager
         this._currentState = GameState.Menu;
         this._context = context;
         this._numPlacedShips = 0;
-        this._isTwoPlayer = true;
+        this._isTwoPlayer = false;
     }
 
     public switchPlayer()
@@ -66,6 +66,7 @@ export class GameManager
         {
             console.log(`${player.Name} has won the game!`);
             this._context.UIManager.disableBoardUI();
+            this._context.UIManager.removeHoverable(true);
         }
     }
 
@@ -103,6 +104,7 @@ export class GameManager
                 this.PlayerTwo.setupBoard();
                 this.startPlaying();
                 this.switchPlayer();
+                this._context.UIManager.removeHoverable();
                 return;
             }
 
@@ -116,6 +118,7 @@ export class GameManager
             setTimeout(() => { 
                 this._context.UIManager.switchPlayer(this.ActiveIndex);
             }, 300);
+            this._context.UIManager.removeHoverable();
             this.startPlaying();
         }
     }
