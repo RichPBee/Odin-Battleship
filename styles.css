@@ -19,5 +19,16 @@
 
 .hoverableSquare:hover
 {
-    background-color: chartreuse;
+    background-color: chartreuse !important;
 }
+
+.clickedSquare
+{
+    background-color: black;
+}
+
+.blankSquare
+{
+    background-color: transparent;
+}
+

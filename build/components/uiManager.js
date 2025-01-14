@@ -12,7 +12,9 @@ class UIManager {
         this._dummySquaresTwo = [];
         this._squareListeners = {};
         this._context = context;
+        this._currentDisplayedPlayer = 0;
         this._isHorizontal = true;
+        this._setupListenersApplied = false;
         this.createComponents();
     }
     createComponents() {
@@ -69,11 +71,19 @@ class UIManager {
             startButton.disabled = true;
             this.colourSquares();
             this.enableUI();
+            this.applyHoverable();
+            if (!this._setupListenersApplied) {
+                this.applyMainSquareListeners();
+            }
+            this.reloadCss();
         });
         resetButton.addEventListener('click', () => {
             this._context.GameManager.reset();
             this.resetSquares();
+            this.removeHoverable();
+            this.switchPlayer(0);
             startButton.disabled = false;
+            this.reloadCss();
         });
         bottomSection.appendChild(startButton);
         bottomSection.appendChild(resetButton);
@@ -83,12 +93,14 @@ class UIManager {
         const { PlayerOne, PlayerTwo } = this._context.GameManager;
         for (const pos of PlayerOne.Gameboard.OccupiedPositions) {
             const square = this._playerOneSquares[pos.x][pos.y];
-            square.setAttribute('style', 'background-color: black');
+            square.classList.add('clickedSquare');
+            square.classList.remove('blankSquare');
             square.classList.remove('hoverableSquare');
         }
         for (const pos of PlayerTwo.Gameboard.OccupiedPositions) {
             const square = this._playerTwoSquares[pos.x][pos.y];
-            square.setAttribute('style', 'background-color: black');
+            square.classList.add('clickedSquare');
+            square.classList.remove('blankSquare');
             square.classList.remove('hoverableSquare');
         }
     }
@@ -96,10 +108,18 @@ class UIManager {
         this.disableBoardUI();
         for (let i = 0; i < this._boardSize; i++) {
             for (let j = 0; j < this._boardSize; j++) {
-                this._playerOneSquares[j][i].setAttribute('style', 'background-color: transparent');
-                this._playerTwoSquares[j][i].setAttribute('style', 'background-color: transparent');
-                this._dummySquaresOne[j][i].setAttribute('style', 'background-color: transparent');
-                this._dummySquaresTwo[j][i].setAttribute('style', 'background-color: transparent');
+                this._playerOneSquares[j][i].classList.add('blankSquare');
+                this._playerTwoSquares[j][i].classList.add('blankSquare');
+                this._dummySquaresOne[j][i].classList.add('blankSquare');
+                this._dummySquaresTwo[j][i].classList.add('blankSquare');
+                this._playerOneSquares[j][i].classList.remove('clickedSquare');
+                this._playerTwoSquares[j][i].classList.remove('clickedSquare');
+                this._dummySquaresOne[j][i].classList.remove('clickedSquare');
+                this._dummySquaresTwo[j][i].classList.remove('clickedSquare');
+                this._dummySquaresOne[j][i].removeAttribute('style');
+                this._dummySquaresTwo[j][i].removeAttribute('style');
+                this._playerOneSquares[j][i].removeAttribute('style');
+                this._playerTwoSquares[j][i].removeAttribute('style');
                 this.applyListeners(this._dummySquaresOne[j][i], this._dummySquaresTwo[j][i], { x: j, y: i });
             }
         }
@@ -156,11 +176,15 @@ class UIManager {
         dummySquare.removeEventListener('click', this.clickBoardSquare);
     }
     switchPlayer(index) {
+        if (index === this._currentDisplayedPlayer)
+            return;
         if (index === 1) {
+            this._currentDisplayedPlayer = index;
             this._boardSection.replaceChild(this._dummyBoardOne, this._playerOneBoard);
             this._boardSection.replaceChild(this._playerTwoBoard, this._dummyBoardTwo);
             return;
         }
+        this._currentDisplayedPlayer = index;
         this._boardSection.replaceChild(this._dummyBoardTwo, this._playerTwoBoard);
         this._boardSection.replaceChild(this._playerOneBoard, this._dummyBoardOne);
     }
@@ -180,6 +204,16 @@ class UIManager {
             }
         }
     }
+    applyHoverable() {
+        for (let i = 0; i < this._boardSize; i++) {
+            for (let j = 0; j < this._boardSize; j++) {
+                this._playerOneSquares[j][i].classList.add('hoverableSquare');
+                this._playerTwoSquares[j][i].classList.add('hoverableSquare');
+                this._dummySquaresOne[j][i].classList.add('hoverableSquare');
+                this._dummySquaresTwo[j][i].classList.add('hoverableSquare');
+            }
+        }
+    }
     createMainSquare(x, y) {
         const boardSquare = document.createElement('div');
         const boardSquare2 = document.createElement('div');
@@ -190,25 +224,38 @@ class UIManager {
         this._playerTwoSquares[x][y] = boardSquare2;
         this._playerOneBoard.appendChild(boardSquare);
         this._playerTwoBoard.appendChild(boardSquare2);
+    }
+    applyMainSquareListeners() {
+        for (let i = 0; i < this._boardSize; i++) {
+            for (let j = 0; j < this._boardSize; j++) {
+                const bs1 = this._playerOneSquares[j][i];
+                const bs2 = this._playerTwoSquares[j][i];
+                const position = { x: j, y: i };
+                this.applyMainSquareListener(bs1, bs2, position);
+            }
+        }
+        this._setupListenersApplied = true;
+    }
+    applyMainSquareListener(boardSquare, boardSquare2, position) {
         const setupListener = () => {
             if (this._context.GameManager.GameState !== 1)
                 return;
-            this._context.GameManager.placeShip({ x, y }, this._isHorizontal);
+            this._context.GameManager.placeShip(position, this._isHorizontal);
             this._context.GameManager.checkSetup();
             this.colourSquares();
         };
         boardSquare.addEventListener('click', setupListener);
         boardSquare2.addEventListener('click', setupListener);
-        boardSquare.classList.add('hoverableSquare');
-        boardSquare2.classList.add('hoverableSquare');
     }
     createDummySquare(x, y) {
         const dummySquare = document.createElement('div');
-        dummySquare.className = 'boardSquare';
+        dummySquare.classList.add('boardSquare');
+        dummySquare.classList.add('dummy');
         this._dummyBoardOne.appendChild(dummySquare);
         this._dummySquaresOne[x][y] = dummySquare;
         const dummySquare2 = document.createElement('div');
-        dummySquare2.className = 'boardSquare';
+        dummySquare2.classList.add('boardSquare');
+        dummySquare2.classList.add('dummy');
         this._dummyBoardTwo.appendChild(dummySquare2);
         this._dummySquaresTwo[x][y] = dummySquare2;
     }
@@ -238,8 +285,6 @@ class UIManager {
         this._squareListeners[this.getListenerKey(position, false)] = listenerTwo;
         dummySquare.addEventListener('click', listenerOne);
         dummySquare2.addEventListener('click', listenerTwo);
-        dummySquare.classList.add('hoverableSquare');
-        dummySquare2.classList.add('hoverableSquare');
     }
     createTopSection() {
         this._topSection = document.createElement('div');
@@ -253,6 +298,14 @@ class UIManager {
         switchDirectionButton.addEventListener('click', switchCallBack);
         this._topSection.appendChild(switchDirectionButton);
         this._main.appendChild(this._topSection);
+    }
+    reloadCss() {
+        const links = document.getElementsByTagName("link");
+        for (const cl in links) {
+            const link = links[cl];
+            if (link.rel === "stylesheet")
+                link.href += "";
+        }
     }
 }
 exports.UIManager = UIManager;

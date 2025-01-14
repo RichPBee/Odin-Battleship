@@ -67,6 +67,7 @@ export class GameManager
             console.log(`${player.Name} has won the game!`);
             this._context.UIManager.disableBoardUI();
             this._context.UIManager.removeHoverable(true);
+            this.switchState(GameState.Ended);
         }
     }
 
@@ -137,6 +138,10 @@ export class GameManager
     {
         this.PlayerOne.reset();
         this.PlayerTwo.reset();
+        this.switchState(GameState.Menu);
+        this._currentPlayer = this.PlayerOne;
+        this._activeIndex = Players.One;
+        this._numPlacedShips = 0;
     }
 
     private playCurrentTurn()

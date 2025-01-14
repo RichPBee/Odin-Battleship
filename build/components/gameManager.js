@@ -56,6 +56,7 @@ class GameManager {
             console.log(`${player.Name} has won the game!`);
             this._context.UIManager.disableBoardUI();
             this._context.UIManager.removeHoverable(true);
+            this.switchState(GameState.Ended);
         }
     }
     placeShip(position, isHorizontal) {
@@ -109,6 +110,10 @@ class GameManager {
     reset() {
         this.PlayerOne.reset();
         this.PlayerTwo.reset();
+        this.switchState(GameState.Menu);
+        this._currentPlayer = this.PlayerOne;
+        this._activeIndex = Players.One;
+        this._numPlacedShips = 0;
     }
     playCurrentTurn() {
         if (this._currentPlayer === this.PlayerTwo && !this._isTwoPlayer) {

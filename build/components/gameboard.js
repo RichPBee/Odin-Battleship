@@ -50,6 +50,7 @@ class Gameboard {
         this._hitPositions = [];
         this._missedPositions = [];
         this._occupiedPositions = [];
+        this._allSunk = false;
         this.generateGrid(this._size);
     }
     checkArrayForHit(position, array) {
