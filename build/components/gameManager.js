@@ -9,7 +9,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GameManager = exports.GameState = exports.Players = void 0;
+exports.GameManager = exports.GameType = exports.GameState = exports.Players = void 0;
+const player_1 = require("./player");
 var Players;
 (function (Players) {
     Players[Players["One"] = 0] = "One";
@@ -22,6 +23,12 @@ var GameState;
     GameState[GameState["Playing"] = 2] = "Playing";
     GameState[GameState["Ended"] = 3] = "Ended";
 })(GameState || (exports.GameState = GameState = {}));
+var GameType;
+(function (GameType) {
+    GameType[GameType["OnePlayer"] = 0] = "OnePlayer";
+    GameType[GameType["TwoPlayer"] = 1] = "TwoPlayer";
+    GameType[GameType["Computer"] = 2] = "Computer";
+})(GameType || (exports.GameType = GameType = {}));
 class GameManager {
     get ActiveIndex() { return this._activeIndex; }
     get CurrentPlayer() { return this._currentPlayer; }
@@ -66,15 +73,19 @@ class GameManager {
             this._numPlacedShips++;
         }
     }
-    startSetup() {
+    startSetup(gameType) {
         return __awaiter(this, void 0, void 0, function* () {
+            this._isComputerOnly = gameType === GameType.Computer;
+            this._isTwoPlayer = gameType === GameType.TwoPlayer;
+            this.createPlayers(this._isComputerOnly, this._isTwoPlayer);
             this.switchState(GameState.Setup);
             if (this._isComputerOnly) {
                 this._players[0].setupBoard();
                 this._players[1].setupBoard();
                 this._numPlacedShips = this.PlayerOne.Gameboard.NumShips + this.PlayerTwo.Gameboard.NumShips;
-                this.switchPlayer();
+                this._context.UIManager.displayBothBoards();
                 this.startPlaying();
+                this.switchPlayer();
             }
         });
     }
@@ -116,10 +127,46 @@ class GameManager {
         this._numPlacedShips = 0;
     }
     playCurrentTurn() {
-        if (this._currentPlayer === this.PlayerTwo && !this._isTwoPlayer) {
+        if (this._currentPlayer === this.PlayerTwo && !this._isTwoPlayer && !this._isComputerOnly) {
             const position = this.PlayerTwo.generateRandomPosition(this.PlayerOne);
             setTimeout(() => this._context.UIManager.clickBoardSquare(position), 300);
         }
+        else if (this._isComputerOnly) {
+            const enemy = this._currentPlayer === this.PlayerTwo ? this.PlayerOne : this.PlayerTwo;
+            const position = this._currentPlayer.generateRandomPosition(enemy);
+            setTimeout(() => this._context.UIManager.clickBoardSquare(position), 300);
+            setTimeout(() => {
+                if (enemy.Gameboard.AllSunk)
+                    return;
+                this.switchPlayer();
+            }, 400);
+            if (enemy.Gameboard.AllSunk) {
+                this.switchState(GameState.Ended);
+            }
+        }
+    }
+    createPlayers(isComputerOnly, isTwoPlayer) {
+        if (isComputerOnly) {
+            const playerOne = new player_1.Computer(this._context.UIManager.BoardSize, 'P1');
+            const playerTwo = new player_1.Computer(this._context.UIManager.BoardSize, 'P2');
+            this._players[0] = playerOne;
+            this._players[1] = playerTwo;
+            this._currentPlayer = playerOne;
+            return;
+        }
+        else if (isTwoPlayer) {
+            const playerOne = new player_1.Player(this._context.UIManager.BoardSize, 'P1');
+            const playerTwo = new player_1.Player(this._context.UIManager.BoardSize, 'P2');
+            this._players[0] = playerOne;
+            this._players[1] = playerTwo;
+            this._currentPlayer = playerOne;
+            return;
+        }
+        const playerOne = new player_1.Player(this._context.UIManager.BoardSize, 'P1');
+        const playerTwo = new player_1.Computer(this._context.UIManager.BoardSize, 'P2');
+        this._players[0] = playerOne;
+        this._players[1] = playerTwo;
+        this._currentPlayer = playerOne;
     }
 }
 exports.GameManager = GameManager;

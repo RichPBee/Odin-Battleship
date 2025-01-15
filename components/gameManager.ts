@@ -16,6 +16,13 @@ export enum GameState
     Ended
 }
 
+export enum GameType
+{
+    OnePlayer,
+    TwoPlayer,
+    Computer
+}
+
 export class GameManager
 {
     private _context: GameContext;
@@ -81,16 +88,20 @@ export class GameManager
         }
     }
 
-    public async startSetup()
+    public async startSetup(gameType: number)
     {
+        this._isComputerOnly = gameType === GameType.Computer;
+        this._isTwoPlayer = gameType === GameType.TwoPlayer;
+        this.createPlayers(this._isComputerOnly, this._isTwoPlayer);
         this.switchState(GameState.Setup);
         if (this._isComputerOnly)
         {
             this._players[0].setupBoard();
             this._players[1].setupBoard();
             this._numPlacedShips = this.PlayerOne.Gameboard.NumShips + this.PlayerTwo.Gameboard.NumShips;
-            this.switchPlayer();
+            this._context.UIManager.displayBothBoards();
             this.startPlaying();
+            this.switchPlayer();
         }
     }
     
@@ -146,11 +157,56 @@ export class GameManager
 
     private playCurrentTurn()
     {
-        if (this._currentPlayer === this.PlayerTwo && !this._isTwoPlayer)
+        if (this._currentPlayer === this.PlayerTwo && !this._isTwoPlayer && !this._isComputerOnly)
         {
             const position = (this.PlayerTwo as Computer).generateRandomPosition(this.PlayerOne);
             setTimeout(() => this._context.UIManager.clickBoardSquare(position), 300);
         }
+        else if (this._isComputerOnly)
+        {
+            const enemy = this._currentPlayer === this.PlayerTwo ? this.PlayerOne : this.PlayerTwo;
+            const position = (this._currentPlayer as Computer).generateRandomPosition(enemy);
+            setTimeout(() => this._context.UIManager.clickBoardSquare(position), 300);
+            setTimeout(() => { 
+                this.switchPlayer();
+            })    
+        
+            setTimeout(() => {
+                if (enemy.Gameboard.AllSunk) return;
+                this.switchPlayer();
+            }, 400);
+            if (enemy.Gameboard.AllSunk)
+            {
+                this.switchState(GameState.Ended);
+            }
+        }
+    }
+
+    private createPlayers(isComputerOnly: boolean, isTwoPlayer: boolean)
+    {
+        if (isComputerOnly)
+        {
+            const playerOne = new Computer(this._context.UIManager.BoardSize, 'P1');
+            const playerTwo = new Computer(this._context.UIManager.BoardSize, 'P2');
+            this._players[0] = playerOne;
+            this._players[1] = playerTwo;
+            this._currentPlayer = playerOne;
+            return;
+        }
+        else if (isTwoPlayer)
+        {
+            const playerOne = new Player(this._context.UIManager.BoardSize, 'P1');
+            const playerTwo = new Player(this._context.UIManager.BoardSize, 'P2');
+            this._players[0] = playerOne;
+            this._players[1] = playerTwo;
+            this._currentPlayer = playerOne;
+            return;
+        }
+        const playerOne = new Player(this._context.UIManager.BoardSize, 'P1');
+        const playerTwo = new Computer(this._context.UIManager.BoardSize, 'P2');
+        this._players[0] = playerOne;
+        this._players[1] = playerTwo;
+        this._currentPlayer = playerOne;
     }
 }
 

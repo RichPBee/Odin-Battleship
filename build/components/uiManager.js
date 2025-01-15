@@ -2,6 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UIManager = void 0;
 class UIManager {
+    get BoardSize() { return this._boardSize; }
+    ;
     constructor(document, boardSize = 10, context) {
         this._document = document;
         this._boardSize = boardSize;
@@ -16,6 +18,9 @@ class UIManager {
         this._isHorizontal = true;
         this._setupListenersApplied = false;
         this.createComponents();
+    }
+    displayBothBoards() {
+        this._boardSection.replaceChild(this._playerTwoBoard, this._dummyBoardTwo);
     }
     createComponents() {
         this.createTopSection();
@@ -66,8 +71,11 @@ class UIManager {
         startButton.innerText = 'Start';
         const resetButton = document.createElement('button');
         resetButton.innerText = 'Reset';
+        const radioButtonSection = document.createElement('div');
+        this.createRadioButtons(radioButtonSection);
         startButton.addEventListener('click', () => {
-            this._context.GameManager.startSetup();
+            const gameType = this.getGameType();
+            this._context.GameManager.startSetup(gameType);
             startButton.disabled = true;
             this.colourSquares();
             this.enableUI();
@@ -87,7 +95,42 @@ class UIManager {
         });
         bottomSection.appendChild(startButton);
         bottomSection.appendChild(resetButton);
+        bottomSection.appendChild(radioButtonSection);
         this._main.appendChild(bottomSection);
+    }
+    createRadioButtons(parent) {
+        const onePGame = document.createElement('input');
+        onePGame.setAttribute('name', 'gameType');
+        onePGame.setAttribute('type', 'radio');
+        onePGame.setAttribute('value', '1P');
+        onePGame.setAttribute('id', 'OnePGame');
+        onePGame.setAttribute('checked', 'true');
+        const label1 = document.createElement('label');
+        label1.setAttribute('for', 'OnePGame');
+        label1.innerText = '1P';
+        const twoPGame = document.createElement('input');
+        twoPGame.setAttribute('name', 'gameType');
+        twoPGame.setAttribute('type', 'radio');
+        twoPGame.setAttribute('value', '2P');
+        twoPGame.setAttribute('id', 'twoPGame');
+        const label2 = document.createElement('label');
+        label2.setAttribute('for', 'twoPGame');
+        label2.innerText = '2P';
+        const compGame = document.createElement('input');
+        compGame.setAttribute('name', 'gameType');
+        compGame.setAttribute('type', 'radio');
+        compGame.setAttribute('value', 'Comp');
+        compGame.setAttribute('id', 'compGame');
+        const label3 = document.createElement('label');
+        label3.setAttribute('for', 'compGame');
+        label3.innerText = 'COMP';
+        parent.appendChild(onePGame);
+        parent.appendChild(label1);
+        parent.appendChild(twoPGame);
+        parent.appendChild(label2);
+        parent.appendChild(compGame);
+        parent.appendChild(label3);
+        this._radioButtons = [onePGame, twoPGame, compGame];
     }
     colourSquares() {
         const { PlayerOne, PlayerTwo } = this._context.GameManager;
@@ -306,6 +349,11 @@ class UIManager {
             if (link.rel === "stylesheet")
                 link.href += "";
         }
+    }
+    getGameType() {
+        const checkedBtn = this._radioButtons.filter((btn) => btn.checked)[0];
+        console.log(this._radioButtons.indexOf(checkedBtn));
+        return this._radioButtons.indexOf(checkedBtn);
     }
 }
 exports.UIManager = UIManager;
