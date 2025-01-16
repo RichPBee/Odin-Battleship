@@ -153,9 +153,13 @@ export class GameManager
         this._currentPlayer = this.PlayerOne;
         this._activeIndex = Players.One;
         this._numPlacedShips = 0;
+        if (this._isComputerOnly)
+        {
+            this._context.UIManager.displayPlayerOneBoard();
+        }
     }
 
-    private playCurrentTurn()
+    private async playCurrentTurn()
     {
         if (this._currentPlayer === this.PlayerTwo && !this._isTwoPlayer && !this._isComputerOnly)
         {
@@ -166,20 +170,24 @@ export class GameManager
         {
             const enemy = this._currentPlayer === this.PlayerTwo ? this.PlayerOne : this.PlayerTwo;
             const position = (this._currentPlayer as Computer).generateRandomPosition(enemy);
-            setTimeout(() => this._context.UIManager.clickBoardSquare(position), 300);
-            setTimeout(() => { 
-                this.switchPlayer();
-            })    
-        
-            setTimeout(() => {
-                if (enemy.Gameboard.AllSunk) return;
-                this.switchPlayer();
-            }, 400);
+            await this.wait(200);
+            this._context.UIManager.clickBoardSquare(position);
+            await this.wait(100);
             if (enemy.Gameboard.AllSunk)
             {
-                this.switchState(GameState.Ended);
+               this.switchState(GameState.Ended);
+               return; 
             }
+            await this.wait(100);  
+            this.switchPlayer();
         }
+    }
+
+    private wait(ms: number)
+    {
+        return new Promise(resolve => {
+            setTimeout(resolve, ms);
+        })
     }
 
     private createPlayers(isComputerOnly: boolean, isTwoPlayer: boolean)

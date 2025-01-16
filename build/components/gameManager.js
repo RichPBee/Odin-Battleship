@@ -125,25 +125,35 @@ class GameManager {
         this._currentPlayer = this.PlayerOne;
         this._activeIndex = Players.One;
         this._numPlacedShips = 0;
+        if (this._isComputerOnly) {
+            this._context.UIManager.displayPlayerOneBoard();
+        }
     }
     playCurrentTurn() {
-        if (this._currentPlayer === this.PlayerTwo && !this._isTwoPlayer && !this._isComputerOnly) {
-            const position = this.PlayerTwo.generateRandomPosition(this.PlayerOne);
-            setTimeout(() => this._context.UIManager.clickBoardSquare(position), 300);
-        }
-        else if (this._isComputerOnly) {
-            const enemy = this._currentPlayer === this.PlayerTwo ? this.PlayerOne : this.PlayerTwo;
-            const position = this._currentPlayer.generateRandomPosition(enemy);
-            setTimeout(() => this._context.UIManager.clickBoardSquare(position), 300);
-            setTimeout(() => {
-                if (enemy.Gameboard.AllSunk)
-                    return;
-                this.switchPlayer();
-            }, 400);
-            if (enemy.Gameboard.AllSunk) {
-                this.switchState(GameState.Ended);
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this._currentPlayer === this.PlayerTwo && !this._isTwoPlayer && !this._isComputerOnly) {
+                const position = this.PlayerTwo.generateRandomPosition(this.PlayerOne);
+                setTimeout(() => this._context.UIManager.clickBoardSquare(position), 300);
             }
-        }
+            else if (this._isComputerOnly) {
+                const enemy = this._currentPlayer === this.PlayerTwo ? this.PlayerOne : this.PlayerTwo;
+                const position = this._currentPlayer.generateRandomPosition(enemy);
+                yield this.wait(200);
+                this._context.UIManager.clickBoardSquare(position);
+                yield this.wait(100);
+                if (enemy.Gameboard.AllSunk) {
+                    this.switchState(GameState.Ended);
+                    return;
+                }
+                yield this.wait(100);
+                this.switchPlayer();
+            }
+        });
+    }
+    wait(ms) {
+        return new Promise(resolve => {
+            setTimeout(resolve, ms);
+        });
     }
     createPlayers(isComputerOnly, isTwoPlayer) {
         if (isComputerOnly) {

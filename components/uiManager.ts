@@ -56,6 +56,11 @@ export class UIManager
         this._boardSection.replaceChild(this._playerTwoBoard, this._dummyBoardTwo);
     }
 
+    public displayPlayerOneBoard()
+    {
+        this._boardSection.replaceChild(this._dummyBoardTwo, this._playerTwoBoard);
+    }
+
     private createComponents()
     {
         this.createTopSection();
@@ -187,8 +192,8 @@ export class UIManager
         parent.appendChild(label1);
         parent.appendChild(twoPGame);
         parent.appendChild(label2);
-        parent.appendChild(compGame);
-        parent.appendChild(label3);
+        // parent.appendChild(compGame);
+        // parent.appendChild(label3);
         this._radioButtons = [onePGame, twoPGame, compGame];
     }
 
@@ -469,7 +474,6 @@ export class UIManager
     private getGameType()
     {
         const checkedBtn = this._radioButtons.filter((btn) => btn.checked)[0];
-        console.log(this._radioButtons.indexOf(checkedBtn));
         return this._radioButtons.indexOf(checkedBtn);
     }
 }
