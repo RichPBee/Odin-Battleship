@@ -104,7 +104,6 @@ export class GameManager
             this.switchPlayer();
         }
     }
-    
 
     public checkSetup()
     {
@@ -163,13 +162,13 @@ export class GameManager
     {
         if (this._currentPlayer === this.PlayerTwo && !this._isTwoPlayer && !this._isComputerOnly)
         {
-            const position = (this.PlayerTwo as Computer).generateRandomPosition(this.PlayerOne);
+            const position = (this.PlayerTwo as Computer).generateAttackPosition(this.PlayerOne);
             setTimeout(() => this._context.UIManager.clickBoardSquare(position), 300);
         }
         else if (this._isComputerOnly)
         {
             const enemy = this._currentPlayer === this.PlayerTwo ? this.PlayerOne : this.PlayerTwo;
-            const position = (this._currentPlayer as Computer).generateRandomPosition(enemy);
+            const position = (this._currentPlayer as Computer).generateAttackPosition(enemy);
             await this.wait(200);
             this._context.UIManager.clickBoardSquare(position);
             await this.wait(100);
@@ -211,7 +210,7 @@ export class GameManager
             return;
         }
         const playerOne = new Player(this._context.UIManager.BoardSize, 'P1');
-        const playerTwo = new Computer(this._context.UIManager.BoardSize, 'P2');
+        const playerTwo = new Computer(this._context.UIManager.BoardSize, 'P2', 2);
         this._players[0] = playerOne;
         this._players[1] = playerTwo;
         this._currentPlayer = playerOne;

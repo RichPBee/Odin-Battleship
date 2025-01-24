@@ -1,6 +1,16 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UIManager = void 0;
+const splashScreen_1 = require("./splashScreen");
 class UIManager {
     get BoardSize() { return this._boardSize; }
     ;
@@ -222,17 +232,24 @@ class UIManager {
         dummySquare.removeEventListener('click', this.clickBoardSquare);
     }
     switchPlayer(index) {
-        if (index === this._currentDisplayedPlayer)
-            return;
-        if (index === 1) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const gameState = this._context.GameManager.GameState;
+            if (gameState === 1 || gameState === 2) {
+                const splashScreen = new splashScreen_1.SplashScreen(this._document, this._main, this._context);
+                yield splashScreen.close();
+            }
+            if (index === this._currentDisplayedPlayer)
+                return;
+            if (index === 1) {
+                this._currentDisplayedPlayer = index;
+                this._boardSection.replaceChild(this._dummyBoardOne, this._playerOneBoard);
+                this._boardSection.replaceChild(this._playerTwoBoard, this._dummyBoardTwo);
+                return;
+            }
             this._currentDisplayedPlayer = index;
-            this._boardSection.replaceChild(this._dummyBoardOne, this._playerOneBoard);
-            this._boardSection.replaceChild(this._playerTwoBoard, this._dummyBoardTwo);
-            return;
-        }
-        this._currentDisplayedPlayer = index;
-        this._boardSection.replaceChild(this._dummyBoardTwo, this._playerTwoBoard);
-        this._boardSection.replaceChild(this._playerOneBoard, this._dummyBoardOne);
+            this._boardSection.replaceChild(this._dummyBoardTwo, this._playerTwoBoard);
+            this._boardSection.replaceChild(this._playerOneBoard, this._dummyBoardOne);
+        });
     }
     removeHoverable(removeFromDummy = false) {
         if (removeFromDummy) {

@@ -78,10 +78,10 @@ export class Gameboard
 
     private checkArrayForHit(position: Vector2, array: Vector2[]): boolean
     {
-        return array.find(pos => pos.x === position.x && pos.y === position.y) != undefined;
+        return array.find((pos) => pos.x === position.x && pos.y === position.y) != undefined;
     }
 
-    private checkPosition(position: Vector2): Ship | null
+    public checkPosition(position: Vector2): Ship | null
     {
         const {x, y} = position;
         return this._grid[x][y];

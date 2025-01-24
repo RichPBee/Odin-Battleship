@@ -132,12 +132,12 @@ class GameManager {
     playCurrentTurn() {
         return __awaiter(this, void 0, void 0, function* () {
             if (this._currentPlayer === this.PlayerTwo && !this._isTwoPlayer && !this._isComputerOnly) {
-                const position = this.PlayerTwo.generateRandomPosition(this.PlayerOne);
+                const position = this.PlayerTwo.generateAttackPosition(this.PlayerOne);
                 setTimeout(() => this._context.UIManager.clickBoardSquare(position), 300);
             }
             else if (this._isComputerOnly) {
                 const enemy = this._currentPlayer === this.PlayerTwo ? this.PlayerOne : this.PlayerTwo;
-                const position = this._currentPlayer.generateRandomPosition(enemy);
+                const position = this._currentPlayer.generateAttackPosition(enemy);
                 yield this.wait(200);
                 this._context.UIManager.clickBoardSquare(position);
                 yield this.wait(100);
@@ -173,7 +173,7 @@ class GameManager {
             return;
         }
         const playerOne = new player_1.Player(this._context.UIManager.BoardSize, 'P1');
-        const playerTwo = new player_1.Computer(this._context.UIManager.BoardSize, 'P2');
+        const playerTwo = new player_1.Computer(this._context.UIManager.BoardSize, 'P2', 2);
         this._players[0] = playerOne;
         this._players[1] = playerTwo;
         this._currentPlayer = playerOne;

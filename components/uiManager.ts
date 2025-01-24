@@ -1,6 +1,7 @@
 import { GameContext } from "../Game";
 import { Vector2 } from "../utilities/IVector2";
 import { GameState } from "./gameManager";
+import { SplashScreen } from "./splashScreen";
 
 type ListenerFunction =
 {
@@ -309,8 +310,14 @@ export class UIManager
         dummySquare.removeEventListener('click', this.clickBoardSquare);
     }
 
-    public switchPlayer(index: number)
+    public async switchPlayer(index: number)
     {
+        const gameState = this._context.GameManager.GameState;
+        if (gameState === 1 || gameState === 2)
+        {
+            const splashScreen = new SplashScreen(this._document, this._main, this._context);
+            await splashScreen.close();
+        }
         if (index === this._currentDisplayedPlayer) return;
         if (index === 1)
         {

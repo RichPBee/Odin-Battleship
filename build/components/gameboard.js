@@ -54,7 +54,7 @@ class Gameboard {
         this.generateGrid(this._size);
     }
     checkArrayForHit(position, array) {
-        return array.find(pos => pos.x === position.x && pos.y === position.y) != undefined;
+        return array.find((pos) => pos.x === position.x && pos.y === position.y) != undefined;
     }
     checkPosition(position) {
         const { x, y } = position;
