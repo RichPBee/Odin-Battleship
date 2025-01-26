@@ -81,7 +81,7 @@ class Computer extends Player {
             return this.generateRandomPosition(enemy);
         }
         else if (this._difficulty === 1) {
-            return this.getNextAdjacentPosition(enemy);
+            return this.getNextAdjacentPosition(this._lastHitPosition, enemy);
         }
         return this.generateCalculatedPosition(enemy);
     }
@@ -91,56 +91,83 @@ class Computer extends Player {
         if (!isUsed) {
             if (enemy.Gameboard.checkPosition(position)) {
                 this._lastHitPosition = this.calculateAdjacentPositions(position, enemy);
-                this._subsequentHitPositions.push(position);
+                this._subsequentHitPositions.push(this._lastHitPosition);
+                this._nextDirection = null;
             }
             return position;
         }
         return this.generateRandomPosition(enemy);
     }
-    getNextAdjacentPosition(enemy) {
-        const position = this._lastHitPosition.adjacentPositions[0];
+    getNextAdjacentPosition(posInfo, enemy) {
+        const position = posInfo.adjacentPositions[0];
         const isUsed = enemy.Gameboard.isPositionHit(position, true) || enemy.Gameboard.isPositionHit(position, false);
         if (!position || isUsed) {
             return this.generateRandomPosition(enemy);
         }
-        this._lastHitPosition.adjacentPositions.shift();
+        posInfo.adjacentPositions.shift();
         return position;
     }
     generateCalculatedPosition(enemy) {
-        if (this._subsequentHitPositions.length === 0) {
+        const numHitPositions = this._subsequentHitPositions.length;
+        if (numHitPositions === 0)
             return this.generateRandomPosition(enemy);
+        const firstHitPosition = this._subsequentHitPositions[0];
+        if (numHitPositions === 1 && !this._nextDirection) {
+            const nextPosToHit = this.getNextAdjacentPosition(firstHitPosition, enemy);
+            if (enemy.Gameboard.checkPosition(nextPosToHit)) {
+                const nextAdjacents = this.calculateAdjacentPositions(nextPosToHit, enemy);
+                this._subsequentHitPositions.push(nextAdjacents);
+            }
+            return nextPosToHit;
         }
-        const numHitPostions = this._subsequentHitPositions.length;
-        const maxIndex = this._subsequentHitPositions.length - 1;
-        const currPos = this._subsequentHitPositions[maxIndex];
-        const nextPositions = this.calculateAdjacentPositions(currPos, enemy).adjacentPositions;
-        if (numHitPostions === 1) {
-            return this.targetAdjacentPositions(nextPositions, enemy);
+        else if (numHitPositions === 1 && this._nextDirection) {
+            const nextPosition = this.getNextPosition(this._nextDirection, firstHitPosition.position);
+            return this.targetNextPosition(nextPosition, firstHitPosition, enemy);
         }
-        const prevPos = this._subsequentHitPositions[maxIndex - 1];
-        this._nextDirection = this.calculateDirection(currPos, prevPos);
-        const nextPos = this.getNextPosition(this._nextDirection, currPos);
-        if (!this.isValidPosition(nextPos)) {
+        const lastHitPosition = this._subsequentHitPositions[numHitPositions - 1];
+        const previousHitPosition = this._subsequentHitPositions[numHitPositions - 2];
+        this._nextDirection = this.calculateDirection(lastHitPosition.position, previousHitPosition.position);
+        const nextPosition = this.getNextPosition(this._nextDirection, lastHitPosition.position);
+        return this.targetNextPosition(nextPosition, firstHitPosition, enemy);
+    }
+    targetNextPosition(nextPosition, firstHitPosition, enemy, hasSwitched = false) {
+        const isNextUsed = enemy.Gameboard.isPositionHit(nextPosition, true) || enemy.Gameboard.isPositionHit(nextPosition, false);
+        if (!this.isValidPosition(nextPosition) || isNextUsed) {
             this._nextDirection = this.getOppositeDirection(this._nextDirection);
-            const oppositePos = this.getNextPosition(this._nextDirection, this._subsequentHitPositions[0]);
+            const oppositePos = this.getNextPosition(this._nextDirection, firstHitPosition.position);
             if (!this.isValidPosition(oppositePos)) {
                 this._subsequentHitPositions = [];
                 return this.generateRandomPosition(enemy);
             }
             const isUsed = enemy.Gameboard.isPositionHit(oppositePos, true) || enemy.Gameboard.isPositionHit(oppositePos, false);
             if (!isUsed) {
-                this._subsequentHitPositions = [this._subsequentHitPositions[0], oppositePos];
+                if (enemy.Gameboard.checkPosition(oppositePos)) {
+                    const relevantHitInfo = this.calculateAdjacentPositions(oppositePos, enemy);
+                    this._subsequentHitPositions = [firstHitPosition, relevantHitInfo];
+                }
                 return oppositePos;
             }
             this._subsequentHitPositions = [];
+            this._nextDirection = null;
             return this.generateRandomPosition(enemy);
         }
-        const isUsed = enemy.Gameboard.isPositionHit(nextPos, true) || enemy.Gameboard.isPositionHit(nextPos, false);
-        if (!isUsed) {
-            this._subsequentHitPositions.push(nextPos);
-            return nextPos;
+        if (!isNextUsed) {
+            if (enemy.Gameboard.checkPosition(nextPosition)) {
+                const relevantHitInfo = this.calculateAdjacentPositions(nextPosition, enemy);
+                this._subsequentHitPositions.push(relevantHitInfo);
+            }
+            else if (!hasSwitched) {
+                this._nextDirection = this.getOppositeDirection(this._nextDirection);
+                this._subsequentHitPositions = [firstHitPosition];
+            }
+            else {
+                this._nextDirection = null;
+                this._subsequentHitPositions = [];
+            }
+            return nextPosition;
         }
         this._subsequentHitPositions = [];
+        this._nextDirection = null;
         return this.generateRandomPosition(enemy);
     }
     targetAdjacentPositions(nextPositions, enemy) {
@@ -151,7 +178,7 @@ class Computer extends Player {
             const isUsed = enemy.Gameboard.isPositionHit(nextPos, true) || enemy.Gameboard.isPositionHit(nextPos, false);
             if (!isUsed) {
                 if (enemy.Gameboard.checkPosition(nextPos)) {
-                    this._subsequentHitPositions.push(nextPos);
+                    this._subsequentHitPositions.push(this.calculateAdjacentPositions(nextPos, enemy));
                 }
                 return nextPos;
             }
